@@ -3,163 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>naruto</title>
-  
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-
+  <title>Naruto — Ninja Jutsu</title>
   <style>
-    body { margin: 0; overflow: hidden; background-color: black; }
-    #v_src, #out {
-      position: absolute; top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      object-fit: cover; transform: scaleX(-1);
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
     }
-    #out { z-index: 2; pointer-events: none; }
-    .darkness {
-      position: absolute; top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(10, 5, 0, 0.3);
-      mix-blend-mode: multiply; pointer-events: none; z-index: 5;
+
+    .container {
+      max-width: 720px;
+      width: 100%;
     }
-    .fx {
-      position: absolute; height: auto; top: 0; left: 0;
-      transform: translate(-50%, -50%);
-      pointer-events: none; display: none;
-      mix-blend-mode: screen; z-index: 20;
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
     }
-    #n { width: 1600px; }
-    #s { width: 2400px; }
+
+    .logo {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      color: #8a8a8a;
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: #141414;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      padding: 1.75rem;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, transform 0.15s;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      border-color: #f97316;
+      transform: translateY(-2px);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .card.rasengan::before { background: linear-gradient(180deg, #3b82f6, #06b6d4); }
+    .card.shadow::before { background: linear-gradient(180deg, #f97316, #ef4444); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1e1e1e;
+      border-radius: 10px;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: #a0a0a0;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #1e1e1e;
+      color: #8a8a8a;
+      border: 1px solid #2a2a2a;
+    }
+
+    .tag.warn {
+      background: #2a1f0e;
+      color: #f59e0b;
+      border-color: #3d2e0f;
+    }
+
+    .card-link {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #f97316;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .card.rasengan .card-link { color: #3b82f6; }
+
+    .footer {
+      text-align: center;
+      margin-top: 2.5rem;
+      font-size: 0.8rem;
+      color: #525252;
+    }
+
+    .footer a {
+      color: #737373;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer a:hover { color: #a0a0a0; }
   </style>
 </head>
 <body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🍥</div>
+      <h1>Naruto — Ninja Jutsu</h1>
+      <p class="subtitle">Browser-based ninja powers powered by hand tracking &amp; machine learning</p>
+    </div>
 
-  <video id="v_src" autoplay playsinline></video>
-  <canvas id="out"></canvas>
-  <div class="darkness"></div>
+    <div class="cards">
+      <!-- Ninja Powers -->
+      <a href="ninja-powers.html" class="card rasengan">
+        <div class="card-header">
+          <div class="card-icon">🌀</div>
+          <div>
+            <div class="card-title">Ninja Powers</div>
+          </div>
+        </div>
+        <p class="card-desc">Unleash <strong>Rasengan</strong> and <strong>Chidori</strong> with hand gestures. Real-time hand tracking overlays animated jutsu effects directly on your webcam feed.</p>
+        <div class="card-tags">
+          <span class="tag">MediaPipe Hands</span>
+          <span class="tag">Canvas API</span>
+          <span class="tag">Vanilla JS</span>
+        </div>
+        <span class="card-link">Open app →</span>
+      </a>
 
-  <video id="n" class="fx" src="assets/naruto.mp4" muted autoplay loop playsinline></video>
-  <video id="s" class="fx" src="assets/sasuke.mp4" muted autoplay loop playsinline></video>
+      <!-- Shadow Clone -->
+      <a href="shadow-clone.html" class="card shadow">
+        <div class="card-header">
+          <div class="card-icon">👥</div>
+          <div>
+            <div class="card-title">Shadow Clone Jutsu</div>
+          </div>
+        </div>
+        <p class="card-desc">Perform a hand sign to trigger <strong>shadow clones</strong> with smoke effects. Uses a custom-trained neural network to recognize your gesture in real time.</p>
+        <div class="card-tags">
+          <span class="tag">TensorFlow.js</span>
+          <span class="tag">MediaPipe Holistic</span>
+          <span class="tag">Selfie Segmentation</span>
+          <span class="tag warn">Needs local server</span>
+          <span class="tag warn">Needs trained model</span>
+        </div>
+        <span class="card-link">Open app →</span>
+      </a>
+    </div>
 
-  <script>
-    const vElement = document.getElementById('v_src');
-    const cElement = document.getElementById('out');
-    const ctx = cElement.getContext('2d');
-    const n = document.getElementById('n');
-    const s = document.getElementById('s');
-
-    let pwr = [0, 0]; 
-    let wasOpen = [false, false];
-
-    function checkOpen(pts) {
-        let count = 0;
-        const wrist = pts[0];
-        const tips = [8, 12, 16, 20];
-        const pips = [6, 10, 14, 18];
-        for (let i = 0; i < tips.length; i++) {
-            const tip = pts[tips[i]];
-            const pip = pts[pips[i]];
-            if (Math.hypot(tip.x - wrist.x, tip.y - wrist.y) > Math.hypot(pip.x - wrist.x, pip.y - wrist.y)) count++;
-        }
-        return count >= 3;
-    }
-
-    function onResults(res) {
-        cElement.width = vElement.videoWidth;
-        cElement.height = vElement.videoHeight;
-        ctx.save();
-        ctx.clearRect(0, 0, cElement.width, cElement.height);
-
-        let fL = false;
-        let fR = false;
-
-        n.style.display = 'none';
-        s.style.display = 'none';
-
-        if (res.multiHandLandmarks && res.multiHandedness) {
-            res.multiHandLandmarks.forEach((pts, i) => {
-                const label = res.multiHandedness[i].label;
-                const isR = label === 'Right';
-                const idx = isR ? 1 : 0;
-
-                // --- BRIGHT BLUE SKELETON ---
-                ctx.save();
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#00fbff';
-                drawConnectors(ctx, pts, HAND_CONNECTIONS, {color: '#00d4ff', lineWidth: 3});
-                drawLandmarks(ctx, pts, {color: '#ffffff', lineWidth: 1, radius: 2});
-                ctx.restore();
-
-                const open = checkOpen(pts);
-                pwr[idx] += open ? 0.05 : -0.15;
-                pwr[idx] = Math.max(0, Math.min(1, pwr[idx]));
-
-                if (open && !wasOpen[idx]) {
-                    const vid = isR ? s : n;
-                    vid.currentTime = 0;
-                    vid.play();
-                }
-                wasOpen[idx] = open;
-
-                const wrist = pts[0];
-                const knk = pts[9];
-
-                if (pwr[idx] > 0.01) {
-                    if (isR) { 
-                        fR = true;
-                        const tx = (wrist.x + knk.x) / 2;
-                        const ty = (wrist.y + knk.y) / 2;
-                        s.style.left = `${(1 - tx) * window.innerWidth}px`;
-                        s.style.top = `${ty * window.innerHeight}px`;
-                        s.style.display = 'block';
-                        s.style.opacity = pwr[idx]; 
-                    } else { 
-                        fL = true;
-                        const dx = knk.x - wrist.x;
-                        const dy = knk.y - wrist.y;
-                        const tx = knk.x + (dx * 0.8);
-                        const ty = knk.y + (dy * 0.8);
-                        n.style.left = `${(1 - tx) * window.innerWidth}px`;
-                        n.style.top = `${(ty * window.innerHeight) - 120}px`;
-                        n.style.display = 'block';
-                        n.style.opacity = pwr[idx]; 
-                    }
-                }
-            });
-        }
-
-        if (!fL) {
-            pwr[0] = Math.max(0, pwr[0] - 0.15);
-            if (pwr[0] > 0.01) { n.style.display = 'block'; n.style.opacity = pwr[0]; }
-            wasOpen[0] = false;
-        }
-        if (!fR) {
-            pwr[1] = Math.max(0, pwr[1] - 0.15);
-            if (pwr[1] > 0.01) { s.style.display = 'block'; s.style.opacity = pwr[1]; }
-            wasOpen[1] = false;
-        }
-        ctx.restore();
-    }
-
-    const h = new Hands({
-        locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
-    });
-
-    h.setOptions({
-        maxNumHands: 2,
-        modelComplexity: 1,
-        minDetectionConfidence: 0.65,
-        minTrackingConfidence: 0.65
-    });
-
-    h.onResults(onResults);
-
-    const cam = new Camera(vElement, {
-        onFrame: async () => { await h.send({ image: vElement }); },
-        width: 1280, height: 720
-    });
-    cam.start();
-  </script>
+    <div class="footer">
+      <p>
+        <a href="trainer.html">Model Trainer</a> &nbsp;·&nbsp;
+        <a href="https://github.com" target="_blank" rel="noopener">GitHub</a> &nbsp;·&nbsp;
+        <a href="README_CN.md">中文</a>
+      </p>
+      <p style="margin-top:0.5rem;">Shadow Clone requires <code>npx serve -p 3000</code> and a trained gesture model.</p>
+    </div>
+  </div>
 </body>
 </html>

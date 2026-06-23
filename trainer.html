@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand gesture trainer</title>
+  <link rel="stylesheet" href="trainer.css">
+</head>
+
+<body>
+<div class="container">
+  <h1>Hand Gesture Trainer</h1>
+  <p class="subtitle">record samples, train the model, then test the model and export</p>
+
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-label">Record samples</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-label">Train model</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-label">Test & export</div></div>
+  </div>
+
+  <div class="video-wrap">
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    <div id="rec-badge" class="recording-badge">● REC</div>
+  </div>
+
+  <!-- Collect -->
+  <div class="section">
+    <div class="section-title">Collect Samples</div>
+    <div class="rec-row">
+      <button type="button" id="btn-rec-clone" class="rec-btn">Record Clone Sign <span class="key">1</span></button>
+      <button type="button" id="btn-rec-other" class="rec-btn">Record Other Poses <span class="key">2</span></button>
+    </div>
+    <div class="sample-counts">
+      Clone sign: <span id="count-clone">0</span> &nbsp;·&nbsp; Other: <span id="count-other">0</span>
+    </div>
+  </div>
+
+  <!-- Train -->
+  <div class="section">
+    <div class="section-title">Train & Test</div>
+    <div class="conf-bar-wrap">
+      <div class="conf-bar"><div id="conf-fill" class="conf-fill"></div></div>
+      <span id="conf-label" class="conf-label">0%</span>
+    </div>
+    <button type="button" id="btn-train" class="train-btn">Train Model</button>
+    <p id="train-status" class="status">Collect at least 50 samples per class, then train.</p>
+  </div>
+
+  <!-- Utilities -->
+  <div class="section">
+    <div class="section-title">Data & Model</div>
+    <div class="util-row">
+      <button type="button" id="btn-export-data" class="util-btn">Export Data (.json)</button>
+      <button type="button" id="btn-import-data" class="util-btn">Import Data</button>
+      <button type="button" id="btn-save-model" class="util-btn">Save Model</button>
+      <button type="button" id="btn-clear-data" class="util-btn danger">Clear All Data</button>
+    </div>
+    <input type="file" id="import-data-input" accept=".json" hidden>
+  </div>
+</div>
+
+<!-- TensorFlow.js -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+<!-- MediaPipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+
+<!-- Trainer -->
+<script src="trainer.js"></script>
+</body>
+</html>

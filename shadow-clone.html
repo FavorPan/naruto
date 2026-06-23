@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Naruto Shadow Clone</title>
+  <link rel="stylesheet" href="shadow-clone.css">
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Naruto Shadow Clone</h1>
+
+      <div id="confidence-container" class="confidence-container">
+        <div class="confidence-text">Confidence:</div>
+        <div class="confidence">0%</div>
+      </div>
+
+      <div id="error" class="error hidden"></div>
+
+      <div class="video-container">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+
+        <!-- Overlay button -->
+        <button class="video-overlay-btn">
+          <img id="overlayImg" src="assets/state-1.png" data-state="1" alt="overlay button" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+  <!-- MediaPipe Core -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+
+  <!-- MediaPipe Models -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+
+  <!-- Javascript -->
+  <script src="shadow-clone.js"></script>
+</body>
+</html>
