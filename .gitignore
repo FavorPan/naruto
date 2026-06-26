@@ -1,3 +1,4 @@
 .DS_Store
-gesture-model.json
-gesture-model.weights.bin
+
+# Docs (local only)
+docs/

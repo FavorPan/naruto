@@ -1,221 +1,581 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Naruto — Ninja Jutsu</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Naruto — Ninja Jutsu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #0a0a0a;
-      color: #e0e0e0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
+      :root {
+        --bg: #060608;
+        --surface: #0d0d12;
+        --border: #1a1a24;
+        --text: #e4e4ec;
+        --muted: #6b6b7b;
+        --accent-o: #f97316;
+        --accent-b: #3b82f6;
+        --accent-p: #a855f7;
+      }
 
-    .container {
-      max-width: 720px;
-      width: 100%;
-    }
+      body {
+        font-family:
+          "Outfit",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
 
-    .header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
+      /* Subtle radial ambient behind the header */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 60% 50% at 50% 20%,
+            rgba(249, 115, 22, 0.06) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 80% 80%,
+            rgba(59, 130, 246, 0.04) 0%,
+            transparent 70%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
 
-    .logo {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-    }
+      .container {
+        max-width: 780px;
+        width: 100%;
+        position: relative;
+        z-index: 1;
+      }
 
-    h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.02em;
-    }
+      /* ---- Header ---- */
+      .header {
+        text-align: center;
+        margin-bottom: 3.5rem;
+      }
 
-    .subtitle {
-      color: #8a8a8a;
-      font-size: 0.95rem;
-      margin-top: 0.5rem;
-    }
+      .logo {
+        display: inline-block;
+        font-size: 2.75rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.3));
+        animation: logo-float 4s ease-in-out infinite;
+      }
 
-    .cards {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
+      @keyframes logo-float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-6px);
+        }
+      }
 
-    .card {
-      background: #141414;
-      border: 1px solid #262626;
-      border-radius: 12px;
-      padding: 1.75rem;
-      text-decoration: none;
-      color: inherit;
-      transition: border-color 0.2s, transform 0.15s;
-      display: block;
-      position: relative;
-      overflow: hidden;
-    }
+      h1 {
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+      }
 
-    .card:hover {
-      border-color: #f97316;
-      transform: translateY(-2px);
-    }
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin-top: 0.625rem;
+        max-width: 440px;
+        margin-inline: auto;
+        line-height: 1.55;
+      }
 
-    .card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-    }
+      /* ---- Lang switch ---- */
+      .lang-switch {
+        display: flex;
+        justify-content: center;
+        gap: 0.375rem;
+        margin-bottom: 2.25rem;
+      }
 
-    .card.rasengan::before { background: linear-gradient(180deg, #3b82f6, #06b6d4); }
-    .card.shadow::before { background: linear-gradient(180deg, #f97316, #ef4444); }
+      .lang-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 5px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 500;
+        font-family: inherit;
+        letter-spacing: 0.02em;
+        transition: all 0.25s ease;
+      }
 
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.75rem;
-    }
+      .lang-btn:hover {
+        border-color: rgba(249, 115, 22, 0.4);
+        color: var(--text);
+      }
 
-    .card-icon {
-      font-size: 2rem;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #1e1e1e;
-      border-radius: 10px;
-    }
+      .lang-btn.active {
+        background: rgba(249, 115, 22, 0.1);
+        border-color: var(--accent-o);
+        color: var(--accent-o);
+      }
 
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #fff;
-    }
+      /* ---- Cards ---- */
+      .cards {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
 
-    .card-desc {
-      font-size: 0.9rem;
-      color: #a0a0a0;
-      line-height: 1.6;
-      margin-bottom: 1rem;
-    }
+      .card {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 1.5rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem 1.75rem;
+        text-decoration: none;
+        color: inherit;
+        transition:
+          border-color 0.3s ease,
+          box-shadow 0.3s ease,
+          transform 0.25s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+      }
 
-    .card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
+      .card:hover {
+        transform: translateY(-2px);
+      }
 
-    .tag {
-      font-size: 0.7rem;
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: #1e1e1e;
-      color: #8a8a8a;
-      border: 1px solid #2a2a2a;
-    }
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        opacity: 0;
+        transition: opacity 0.35s ease;
+        pointer-events: none;
+        z-index: 0;
+      }
 
-    .tag.warn {
-      background: #2a1f0e;
-      color: #f59e0b;
-      border-color: #3d2e0f;
-    }
+      .card.combined:hover {
+        border-color: rgba(168, 85, 247, 0.5);
+        box-shadow:
+          0 0 40px rgba(168, 85, 247, 0.08),
+          inset 0 1px 0 rgba(168, 85, 247, 0.08);
+      }
+      .card.combined:hover::after {
+        background: radial-gradient(
+          ellipse 80% 120% at 0% 50%,
+          rgba(168, 85, 247, 0.06) 0%,
+          transparent 60%
+        );
+        opacity: 1;
+      }
 
-    .card-link {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #f97316;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
+      .card.rasengan:hover {
+        border-color: rgba(59, 130, 246, 0.5);
+        box-shadow:
+          0 0 40px rgba(59, 130, 246, 0.08),
+          inset 0 1px 0 rgba(59, 130, 246, 0.08);
+      }
+      .card.rasengan:hover::after {
+        background: radial-gradient(
+          ellipse 80% 120% at 0% 50%,
+          rgba(59, 130, 246, 0.06) 0%,
+          transparent 60%
+        );
+        opacity: 1;
+      }
 
-    .card.rasengan .card-link { color: #3b82f6; }
+      .card.shadow:hover {
+        border-color: rgba(249, 115, 22, 0.5);
+        box-shadow:
+          0 0 40px rgba(249, 115, 22, 0.08),
+          inset 0 1px 0 rgba(249, 115, 22, 0.08);
+      }
+      .card.shadow:hover::after {
+        background: radial-gradient(
+          ellipse 80% 120% at 0% 50%,
+          rgba(249, 115, 22, 0.06) 0%,
+          transparent 60%
+        );
+        opacity: 1;
+      }
 
-    .footer {
-      text-align: center;
-      margin-top: 2.5rem;
-      font-size: 0.8rem;
-      color: #525252;
-    }
+      .card-body {
+        position: relative;
+        z-index: 1;
+      }
 
-    .footer a {
-      color: #737373;
-      text-decoration: none;
-      transition: color 0.15s;
-    }
+      .card-label {
+        font-size: 0.675rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 0.375rem;
+      }
 
-    .footer a:hover { color: #a0a0a0; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">🍥</div>
-      <h1>Naruto — Ninja Jutsu</h1>
-      <p class="subtitle">Browser-based ninja powers powered by hand tracking &amp; machine learning</p>
-    </div>
+      .card.combined .card-label {
+        color: var(--accent-p);
+      }
+      .card.rasengan .card-label {
+        color: var(--accent-b);
+      }
+      .card.shadow .card-label {
+        color: var(--accent-o);
+      }
 
-    <div class="cards">
-      <!-- Ninja Powers -->
-      <a href="ninja-powers.html" class="card rasengan">
-        <div class="card-header">
-          <div class="card-icon">🌀</div>
-          <div>
-            <div class="card-title">Ninja Powers</div>
+      .card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.01em;
+        margin-bottom: 0.375rem;
+      }
+
+      .card-desc {
+        font-size: 0.85rem;
+        color: var(--muted);
+        line-height: 1.55;
+        max-width: 48ch;
+      }
+
+      .card-arrow {
+        position: relative;
+        z-index: 1;
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+      }
+
+      .card:hover .card-arrow {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateX(3px);
+      }
+
+      .card-arrow svg {
+        width: 16px;
+        height: 16px;
+        color: var(--muted);
+        transition: color 0.3s ease;
+      }
+
+      .card:hover .card-arrow svg {
+        color: var(--text);
+      }
+
+      /* ---- Footer ---- */
+      .footer {
+        text-align: center;
+        margin-top: 3rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .footer a {
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .footer a:hover {
+        color: var(--accent-o);
+      }
+
+      .footer-dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--border);
+      }
+
+      .footer-note {
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+        opacity: 0.55;
+      }
+
+      /* ---- Responsive ---- */
+      @media (max-width: 640px) {
+        body {
+          padding: 1.25rem;
+          align-items: flex-start;
+          padding-top: 3rem;
+        }
+
+        .logo {
+          font-size: 2.25rem;
+        }
+        h1 {
+          font-size: 1.6rem;
+        }
+        .subtitle {
+          font-size: 0.85rem;
+        }
+
+        .card {
+          grid-template-columns: 1fr;
+          padding: 1.25rem;
+        }
+
+        .card-arrow {
+          display: none;
+        }
+      }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        .logo {
+          animation: none;
+        }
+        .card {
+          transition: none;
+        }
+        .card:hover {
+          transform: none;
+        }
+        .card:hover .card-arrow {
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo">🍥</div>
+        <h1 data-i18n="title">Naruto Ninja Jutsu</h1>
+        <p class="subtitle" data-i18n="subtitle">
+          Browser-based ninja powers powered by hand tracking and machine
+          learning
+        </p>
+      </div>
+
+      <div class="lang-switch">
+        <button
+          class="lang-btn active"
+          data-lang="en"
+          aria-label="Switch to English"
+        >
+          EN
+        </button>
+        <button class="lang-btn" data-lang="zh" aria-label="Switch to Chinese">
+          中文
+        </button>
+      </div>
+
+      <div class="cards">
+        <!-- Combined -->
+        <a href="naruto-combined.html" class="card combined">
+          <div class="card-body">
+            <div class="card-label" data-i18n="combined-label">All Jutsu</div>
+            <div class="card-title" data-i18n="combined-title">
+              Combined Ninja Powers
+            </div>
+            <p class="card-desc" data-i18n="combined-desc">
+              Rasengan, Chidori, and Shadow Clone in one immersive view. Trigger
+              all three effects simultaneously with different hand gestures.
+            </p>
           </div>
-        </div>
-        <p class="card-desc">Unleash <strong>Rasengan</strong> and <strong>Chidori</strong> with hand gestures. Real-time hand tracking overlays animated jutsu effects directly on your webcam feed.</p>
-        <div class="card-tags">
-          <span class="tag">MediaPipe Hands</span>
-          <span class="tag">Canvas API</span>
-          <span class="tag">Vanilla JS</span>
-        </div>
-        <span class="card-link">Open app →</span>
-      </a>
-
-      <!-- Shadow Clone -->
-      <a href="shadow-clone.html" class="card shadow">
-        <div class="card-header">
-          <div class="card-icon">👥</div>
-          <div>
-            <div class="card-title">Shadow Clone Jutsu</div>
+          <div class="card-arrow">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 8h10M9 4l4 4-4 4" />
+            </svg>
           </div>
-        </div>
-        <p class="card-desc">Perform a hand sign to trigger <strong>shadow clones</strong> with smoke effects. Uses a custom-trained neural network to recognize your gesture in real time.</p>
-        <div class="card-tags">
-          <span class="tag">TensorFlow.js</span>
-          <span class="tag">MediaPipe Holistic</span>
-          <span class="tag">Selfie Segmentation</span>
-          <span class="tag warn">Needs local server</span>
-          <span class="tag warn">Needs trained model</span>
-        </div>
-        <span class="card-link">Open app →</span>
-      </a>
+        </a>
+
+        <!-- Ninja Powers -->
+        <a href="ninja-powers.html" class="card rasengan">
+          <div class="card-body">
+            <div class="card-label" data-i18n="ninja-label">Hand Signs</div>
+            <div class="card-title" data-i18n="ninja-title">Ninja Powers</div>
+            <p class="card-desc" data-i18n="ninja-desc">
+              Unleash Rasengan and Chidori with hand gestures. Real-time hand
+              tracking overlays animated jutsu effects on your webcam feed.
+            </p>
+          </div>
+          <div class="card-arrow">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 8h10M9 4l4 4-4 4" />
+            </svg>
+          </div>
+        </a>
+
+        <!-- Shadow Clone -->
+        <a href="shadow-clone.html" class="card shadow">
+          <div class="card-body">
+            <div class="card-label" data-i18n="clone-label">Trained Model</div>
+            <div class="card-title" data-i18n="clone-title">
+              Shadow Clone Jutsu
+            </div>
+            <p class="card-desc" data-i18n="clone-desc">
+              Perform a hand sign to trigger shadow clones with smoke effects.
+              Uses a custom-trained neural network to recognize your gesture in
+              real time.
+            </p>
+          </div>
+          <div class="card-arrow">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 8h10M9 4l4 4-4 4" />
+            </svg>
+          </div>
+        </a>
+      </div>
+
+      <div class="footer">
+        <a href="trainer.html" data-i18n="footer-trainer">Model Trainer</a>
+        <span class="footer-dot"></span>
+        <a
+          href="https://github.com/FavorPan/naruto"
+          target="_blank"
+          rel="noopener"
+          >GitHub</a
+        >
+        <span class="footer-note" data-i18n="footer-note"
+          >Shadow Clone and Combined require a local HTTP server and a trained
+          gesture model.</span
+        >
+      </div>
     </div>
 
-    <div class="footer">
-      <p>
-        <a href="trainer.html">Model Trainer</a> &nbsp;·&nbsp;
-        <a href="https://github.com/FavorPan/naruto" target="_blank" rel="noopener">GitHub</a> &nbsp;·&nbsp;
-        <a href="README_CN.md">中文</a>
-      </p>
-      <p style="margin-top:0.5rem;">Shadow Clone requires <code>npx serve -p 3000</code> and a trained gesture model.</p>
-    </div>
-  </div>
-</body>
+    <script>
+      const i18n = {
+        en: {
+          title: "Naruto Ninja Jutsu",
+          subtitle:
+            "Browser-based ninja powers powered by hand tracking and machine learning",
+
+          "combined-label": "All Jutsu",
+          "combined-title": "Combined Ninja Powers",
+          "combined-desc":
+            "Rasengan, Chidori, and Shadow Clone in one immersive view. Trigger all three effects simultaneously with different hand gestures.",
+
+          "ninja-label": "Hand Signs",
+          "ninja-title": "Ninja Powers",
+          "ninja-desc":
+            "Unleash Rasengan and Chidori with hand gestures. Real-time hand tracking overlays animated jutsu effects on your webcam feed.",
+
+          "clone-label": "Trained Model",
+          "clone-title": "Shadow Clone Jutsu",
+          "clone-desc":
+            "Perform a hand sign to trigger shadow clones with smoke effects. Uses a custom-trained neural network to recognize your gesture in real time.",
+
+          "footer-trainer": "Model Trainer",
+          "footer-note":
+            "Shadow Clone and Combined require a local HTTP server and a trained gesture model.",
+        },
+        zh: {
+          title: "火影忍者忍术",
+          subtitle: "基于浏览器的手部追踪与机器学习，释放忍者力量",
+
+          "combined-label": "全术合一",
+          "combined-title": "综合忍术",
+          "combined-desc":
+            "螺旋丸、千鸟、影分身，一镜掌握。通过不同手势同时触发三种效果，全屏沉浸体验。",
+
+          "ninja-label": "手印结印",
+          "ninja-title": "忍术",
+          "ninja-desc":
+            "通过手势释放螺旋丸和千鸟。实时手部追踪将动画忍术效果叠加在摄像头画面上。",
+
+          "clone-label": "模型识别",
+          "clone-title": "影分身之术",
+          "clone-desc":
+            "结印触发影分身及烟雾效果。使用自定义训练的神经网络实时识别你的手势。",
+
+          "footer-trainer": "模型训练器",
+          "footer-note":
+            "影分身和综合忍术需要本地 HTTP 服务器和已训练的手势模型。",
+        },
+      };
+
+      let currentLang = "en";
+
+      function setLang(lang) {
+        currentLang = lang;
+        document.querySelectorAll(".lang-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.lang === lang);
+        });
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.dataset.i18n;
+          if (i18n[lang]?.[key]) {
+            el.innerHTML = i18n[lang][key];
+          }
+        });
+        document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+        localStorage.setItem("naruto-lang", lang);
+      }
+
+      document.querySelectorAll(".lang-btn").forEach((btn) => {
+        btn.addEventListener("click", () => setLang(btn.dataset.lang));
+      });
+
+      const saved = localStorage.getItem("naruto-lang");
+      if (saved) setLang(saved);
+    </script>
+  </body>
 </html>
