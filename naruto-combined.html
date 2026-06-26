@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Naruto — Combined Ninja Powers</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: black; overflow: hidden; font-family: Arial, sans-serif; }
+
+    #video { display: none; }
+
+    #canvas {
+      position: absolute; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      transform: scaleX(-1);
+      z-index: 2;
+    }
+
+    .darkness {
+      position: absolute; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(10, 5, 0, 0.3);
+      mix-blend-mode: multiply; pointer-events: none; z-index: 5;
+    }
+
+    .fx {
+      position: absolute; height: auto; top: 0; left: 0;
+      transform: translate(-50%, -50%);
+      pointer-events: none; display: none;
+      mix-blend-mode: screen; z-index: 20;
+    }
+
+    #naruto-fx { width: 1600px; }
+    #sasuke-fx { width: 2400px; }
+
+    .confidence-container {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 30; color: white; text-align: center;
+    }
+    .confidence-text { font-size: 0.75rem; opacity: 0.6; }
+    .confidence { font-size: 1.25rem; font-weight: bold; }
+
+    .video-overlay-btn {
+      position: absolute; bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      background: none; border: none; padding: 0;
+      cursor: pointer; z-index: 30;
+      transition: transform 0.7s ease;
+    }
+    .video-overlay-btn.pop { transform: translateX(-50%) scale(1.3); }
+    .video-overlay-btn img { width: 120px; height: auto; transform: scaleX(-1); }
+
+    .status-bar {
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      z-index: 30; color: #9ca3af; font-size: 0.75rem;
+      display: flex; gap: 24px;
+    }
+    .status-item { text-align: center; }
+    .status-label { opacity: 0.6; }
+    .status-value { font-weight: bold; }
+    .status-value.active { color: #22c55e; }
+  </style>
+</head>
+<body>
+
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  <div class="darkness"></div>
+
+  <video id="naruto-fx" class="fx" src="assets/naruto.mp4" muted autoplay loop playsinline></video>
+  <video id="sasuke-fx" class="fx" src="assets/sasuke.mp4" muted autoplay loop playsinline></video>
+
+  <div class="confidence-container">
+    <div class="confidence-text">Clone Confidence</div>
+    <div class="confidence">0%</div>
+  </div>
+
+  <button class="video-overlay-btn">
+    <img id="overlayImg" src="assets/state-1.png" data-state="1" alt="clone trigger" />
+  </button>
+
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="status-label">Rasengan</div>
+      <div class="status-value" id="rasengan-status">-</div>
+    </div>
+    <div class="status-item">
+      <div class="status-label">Chidori</div>
+      <div class="status-value" id="chidori-status">-</div>
+    </div>
+    <div class="status-item">
+      <div class="status-label">Clone</div>
+      <div class="status-value" id="clone-status">-</div>
+    </div>
+  </div>
+
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+  <!-- MediaPipe -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+
+  <script>
+  // ============================================================
+  // DOM refs
+  // ============================================================
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  // ============================================================
+  // Finger skeleton drawing
+  // ============================================================
+  const FINGER_INDICES = {
+    thumb:  [0, 1, 2, 3, 4],
+    index:  [0, 5, 6, 7, 8],
+    middle: [0, 9, 10, 11, 12],
+    ring:   [0, 13, 14, 15, 16],
+    pinky:  [0, 17, 18, 19, 20],
+  };
+
+  function drawFingerSkeleton(lm, isLeft) {
+    ctx.strokeStyle = "lime";
+    ctx.lineWidth = 2;
+
+    for (const indices of Object.values(FINGER_INDICES)) {
+      ctx.beginPath();
+      indices.forEach((i, idx) => {
+        const x = (1 - lm[i].x) * canvas.width;
+        const y = lm[i].y * canvas.height;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    lm.forEach((point) => {
+      ctx.beginPath();
+      ctx.arc((1 - point.x) * canvas.width, point.y * canvas.height, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "red";
+      ctx.fill();
+    });
+  }
+
+  // ============================================================
+  // Hand open detection
+  // ============================================================
+  function checkOpen(lm) {
+    if (!lm || lm.length < 21) return false;
+    let count = 0;
+    const wrist = lm[0];
+    const tips = [8, 12, 16, 20];
+    const pips = [6, 10, 14, 18];
+    for (let i = 0; i < tips.length; i++) {
+      const tipDist = Math.hypot(lm[tips[i]].x - wrist.x, lm[tips[i]].y - wrist.y);
+      const pipDist = Math.hypot(lm[pips[i]].x - wrist.x, lm[pips[i]].y - wrist.y);
+      if (tipDist > pipDist) count++;
+    }
+    return count >= 3;
+  }
+
+  // ============================================================
+  // Rasengan & Chidori state
+  // ============================================================
+  let pwrRasengan = 0;
+  let pwrChidori = 0;
+  let wasOpenLeft = false;
+  let wasOpenRight = false;
+
+  const narutoFx = document.getElementById("naruto-fx");
+  const sasukeFx = document.getElementById("sasuke-fx");
+
+  function updateRasengan(leftHand) {
+    const open = leftHand ? checkOpen(leftHand) : false;
+    pwrRasengan += open ? 0.05 : -0.15;
+    pwrRasengan = Math.max(0, Math.min(1, pwrRasengan));
+
+    if (open && !wasOpenLeft) {
+      narutoFx.currentTime = 0;
+      narutoFx.play();
+    }
+    wasOpenLeft = open;
+
+    if (pwrRasengan > 0.01 && leftHand) {
+      const wrist = leftHand[0];
+      const knk = leftHand[9];
+      const dx = knk.x - wrist.x;
+      const dy = knk.y - wrist.y;
+      const tx = knk.x + (dx * 0.8);
+      const ty = knk.y + (dy * 0.8);
+      narutoFx.style.left = `${(1 - tx) * window.innerWidth}px`;
+      narutoFx.style.top = `${(ty * window.innerHeight) - 120}px`;
+      narutoFx.style.display = "block";
+      narutoFx.style.opacity = pwrRasengan;
+    } else {
+      narutoFx.style.display = "none";
+    }
+
+    document.getElementById("rasengan-status").textContent =
+      pwrRasengan > 0.01 ? `${(pwrRasengan * 100).toFixed(0)}%` : "-";
+    if (pwrRasengan > 0.01) {
+      document.getElementById("rasengan-status").classList.add("active");
+    } else {
+      document.getElementById("rasengan-status").classList.remove("active");
+    }
+  }
+
+  function updateChidori(rightHand) {
+    const open = rightHand ? checkOpen(rightHand) : false;
+    pwrChidori += open ? 0.05 : -0.15;
+    pwrChidori = Math.max(0, Math.min(1, pwrChidori));
+
+    if (open && !wasOpenRight) {
+      sasukeFx.currentTime = 0;
+      sasukeFx.play();
+    }
+    wasOpenRight = open;
+
+    if (pwrChidori > 0.01 && rightHand) {
+      const wrist = rightHand[0];
+      const knk = rightHand[9];
+      const tx = (wrist.x + knk.x) / 2;
+      const ty = (wrist.y + knk.y) / 2;
+      sasukeFx.style.left = `${(1 - tx) * window.innerWidth}px`;
+      sasukeFx.style.top = `${ty * window.innerHeight}px`;
+      sasukeFx.style.display = "block";
+      sasukeFx.style.opacity = pwrChidori;
+    } else {
+      sasukeFx.style.display = "none";
+    }
+
+    document.getElementById("chidori-status").textContent =
+      pwrChidori > 0.01 ? `${(pwrChidori * 100).toFixed(0)}%` : "-";
+    if (pwrChidori > 0.01) {
+      document.getElementById("chidori-status").classList.add("active");
+    } else {
+      document.getElementById("chidori-status").classList.remove("active");
+    }
+  }
+
+  // ============================================================
+  // Gesture model (Shadow Clone trigger)
+  // ============================================================
+  let gestureModel = null;
+
+  async function loadGestureModel() {
+    try {
+      gestureModel = await tf.loadLayersModel("gesture-model.json");
+      console.log("Gesture model loaded");
+      document.getElementById("clone-status").textContent = "ready";
+    } catch (e) {
+      console.error("Failed to load gesture model:", e);
+      document.getElementById("clone-status").textContent = "err";
+    }
+  }
+
+  function normalizeHand(lm) {
+    const w = lm[0];
+    const mcp = lm[9];
+    const scale =
+      Math.sqrt(
+        (mcp.x - w.x) ** 2 + (mcp.y - w.y) ** 2 + (mcp.z - w.z) ** 2
+      ) || 1;
+    const out = [];
+    for (let i = 0; i < 21; i++) {
+      out.push((lm[i].x - w.x) / scale);
+      out.push((lm[i].y - w.y) / scale);
+      out.push((lm[i].z - w.z) / scale);
+    }
+    return out;
+  }
+
+  function predictGesture(right, left, threshold = 0.999) {
+    if (!gestureModel || !right || !left) return false;
+    const input = tf.tensor2d([
+      [...normalizeHand(right), ...normalizeHand(left)],
+    ]);
+    const prob = gestureModel.predict(input).dataSync()[0];
+    input.dispose();
+
+    const confidenceEl = document.querySelector(".confidence");
+    if (confidenceEl) confidenceEl.textContent = (prob * 100).toFixed(1) + "%";
+
+    return prob > threshold;
+  }
+
+  loadGestureModel();
+
+  // ============================================================
+  // Clone state
+  // ============================================================
+  let clonesTriggered = false;
+  let cloneStartTime = null;
+
+  const customClones = [
+    { x: -100, y: 100, scale: 0.9,  delay: 1000, smokeSpawned: false },
+    { x:  120, y: 100, scale: 0.85, delay: 1150, smokeSpawned: false },
+    { x: -180, y: 140, scale: 0.8,  delay: 1300, smokeSpawned: false },
+    { x: -140, y: 140, scale: 0.45, delay: 1320, smokeSpawned: false },
+    { x:  180, y: 160, scale: 0.7,  delay: 1450, smokeSpawned: false },
+    { x:  140, y: 160, scale: 0.4,  delay: 1470, smokeSpawned: false },
+    { x: -250, y: 140, scale: 0.7,  delay: 1600, smokeSpawned: false },
+    { x: -220, y: 140, scale: 0.35, delay: 1620, smokeSpawned: false },
+    { x:  260, y: 160, scale: 0.65, delay: 1750, smokeSpawned: false },
+    { x: -100, y: 150, scale: 0.6,  delay: 2500, smokeSpawned: false },
+    { x:  100, y: 150, scale: 0.6,  delay: 2650, smokeSpawned: false },
+    { x: -120, y:  70, scale: 0.55, delay: 2800, smokeSpawned: false },
+    { x:  100, y:  70, scale: 0.5,  delay: 2950, smokeSpawned: false },
+    { x: -200, y:  85, scale: 0.55, delay: 3100, smokeSpawned: false },
+    { x:  230, y:  85, scale: 0.5,  delay: 3250, smokeSpawned: false },
+    { x: -280, y: 100, scale: 0.4,  delay: 3400, smokeSpawned: false },
+  ];
+
+  // ============================================================
+  // Person segmentation (for clones)
+  // ============================================================
+  function grabPerson() {
+    if (!mask) return null;
+    const offscreen = document.createElement("canvas");
+    offscreen.width = canvas.width;
+    offscreen.height = canvas.height;
+    const tempCtx = offscreen.getContext("2d");
+
+    tempCtx.save();
+    tempCtx.scale(-1, 1);
+    tempCtx.drawImage(mask, -canvas.width, 0, canvas.width, canvas.height);
+    tempCtx.restore();
+
+    tempCtx.globalCompositeOperation = "source-in";
+    tempCtx.save();
+    tempCtx.scale(-1, 1);
+    tempCtx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    tempCtx.restore();
+    tempCtx.globalCompositeOperation = "source-over";
+
+    return offscreen;
+  }
+
+  function drawClones(person) {
+    if (!person) return;
+    const now = performance.now();
+    const sorted = [...customClones].sort((a, b) => b.delay - a.delay);
+
+    sorted.forEach((cl) => {
+      if (now - cloneStartTime >= cl.delay) {
+        ctx.save();
+        ctx.translate(cl.x + canvas.width * (1 - cl.scale) / 2, cl.y);
+        ctx.scale(cl.scale, cl.scale);
+        ctx.drawImage(person, 0, 0);
+        ctx.restore();
+      }
+    });
+
+    ctx.drawImage(person, 0, 0);
+  }
+
+  // ============================================================
+  // Smoke sprites
+  // ============================================================
+  const SMOKE_FOLDERS = ["smoke_1", "smoke_2", "smoke_3"];
+  const SMOKE_FRAME_COUNT = 5;
+  const SMOKE_DURATION = 600;
+  const activeSmokes = [];
+
+  function spawnSmoke(x, y, scale) {
+    scale *= 1.2;
+    const folder =
+      SMOKE_FOLDERS[Math.floor(Math.random() * SMOKE_FOLDERS.length)];
+
+    const frames = [];
+    for (let i = 1; i <= SMOKE_FRAME_COUNT; i++) {
+      const img = new Image();
+      img.src = `assets/${folder}/${i}.png`;
+      frames.push(img);
+    }
+
+    activeSmokes.push({ x, y, scale, start: performance.now(), frames });
+  }
+
+  function drawSmokes() {
+    const now = performance.now();
+    for (let i = activeSmokes.length - 1; i >= 0; i--) {
+      const s = activeSmokes[i];
+      const elapsed = now - s.start;
+      const frameDuration = SMOKE_DURATION / SMOKE_FRAME_COUNT;
+      const frameIndex = Math.floor(elapsed / frameDuration);
+
+      if (frameIndex >= s.frames.length) {
+        activeSmokes.splice(i, 1);
+        continue;
+      }
+
+      const img = s.frames[frameIndex];
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.scale(s.scale, s.scale);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.restore();
+    }
+  }
+
+  // ============================================================
+  // Overlay image toggle
+  // ============================================================
+  function toggleImage() {
+    const img = document.getElementById("overlayImg");
+    const btn = img.closest(".video-overlay-btn");
+
+    if (img.dataset.state === "2") return;
+
+    img.src = "assets/state-2.png";
+    img.dataset.state = "2";
+
+    btn.classList.add("pop");
+    setTimeout(() => btn.classList.remove("pop"), 200);
+  }
+
+  // ============================================================
+  // Selfie Segmentation
+  // ============================================================
+  let mask = null;
+  const selfie = new SelfieSegmentation({
+    locateFile: (f) =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`,
+  });
+  selfie.setOptions({ modelSelection: 1 });
+  selfie.onResults((r) => (mask = r.segmentationMask));
+
+  // ============================================================
+  // Holistic
+  // ============================================================
+  const holistic = new Holistic({
+    locateFile: (f) =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${f}`,
+  });
+  holistic.setOptions({
+    modelComplexity: 1,
+    smoothLandmarks: true,
+  });
+
+  // ============================================================
+  // Main render loop
+  // ============================================================
+  holistic.onResults((res) => {
+    if (!mask) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Draw mirrored video background
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+    // 2. Update rasengan (left hand) and chidori (right hand)
+    updateRasengan(res.leftHandLandmarks || null);
+    updateChidori(res.rightHandLandmarks || null);
+
+    // 3. Fade effects when hands not detected
+    if (!res.leftHandLandmarks) {
+      pwrRasengan = Math.max(0, pwrRasengan - 0.15);
+      if (pwrRasengan > 0.01) {
+        narutoFx.style.display = "block";
+        narutoFx.style.opacity = pwrRasengan;
+      } else {
+        narutoFx.style.display = "none";
+      }
+      wasOpenLeft = false;
+      document.getElementById("rasengan-status").textContent = "-";
+      document.getElementById("rasengan-status").classList.remove("active");
+    }
+    if (!res.rightHandLandmarks) {
+      pwrChidori = Math.max(0, pwrChidori - 0.15);
+      if (pwrChidori > 0.01) {
+        sasukeFx.style.display = "block";
+        sasukeFx.style.opacity = pwrChidori;
+      } else {
+        sasukeFx.style.display = "none";
+      }
+      wasOpenRight = false;
+      document.getElementById("chidori-status").textContent = "-";
+      document.getElementById("chidori-status").classList.remove("active");
+    }
+
+    // 4. Shadow Clone trigger + rendering
+    if (!clonesTriggered && gestureModel) {
+      if (predictGesture(res.rightHandLandmarks, res.leftHandLandmarks)) {
+        clonesTriggered = true;
+        cloneStartTime = performance.now();
+        document.getElementById("clone-status").textContent = "active";
+        document.getElementById("clone-status").classList.add("active");
+        console.log("CLONE TRIGGERED");
+      }
+    }
+
+    if (clonesTriggered) {
+      const now = performance.now();
+      customClones.forEach((cl) => {
+        if (!cl.smokeSpawned && now - cloneStartTime >= cl.delay) {
+          cl.smokeSpawned = true;
+          const centerX = cl.x + canvas.width / 2;
+          const centerY = cl.y + canvas.height / 2 - 40;
+          spawnSmoke(centerX - 15, centerY, cl.scale);
+          spawnSmoke(centerX + 15, centerY, cl.scale);
+        }
+      });
+      toggleImage();
+      const person = grabPerson();
+      drawClones(person);
+      drawSmokes();
+    }
+
+    // 5. Draw finger skeletons
+    if (res.rightHandLandmarks) drawFingerSkeleton(res.rightHandLandmarks, false);
+    if (res.leftHandLandmarks) drawFingerSkeleton(res.leftHandLandmarks, true);
+  });
+
+  // ============================================================
+  // Camera
+  // ============================================================
+  const camera = new Camera(video, {
+    width: 640,
+    height: 480,
+    onFrame: async () => {
+      await selfie.send({ image: video });
+      await holistic.send({ image: video });
+    },
+  });
+  camera.start();
+
+  // ============================================================
+  // Reset on load
+  // ============================================================
+  window.onload = () => {
+    clonesTriggered = false;
+    cloneStartTime = null;
+    customClones.forEach((cl) => (cl.smokeSpawned = false));
+  };
+  </script>
+</body>
+</html>
